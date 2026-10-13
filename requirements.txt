@@ -1,0 +1,14 @@
+
+fastapi
+uvicorn
+pydantic
+sqlalchemy
+mysql-connector-python
+alembic
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv
+email-validator
+apscheduler
+reportlab

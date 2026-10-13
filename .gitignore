@@ -1,0 +1,14 @@
+
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+.env
+uploads/*
+!uploads/.gitkeep
+.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+alembic.ini.backup
