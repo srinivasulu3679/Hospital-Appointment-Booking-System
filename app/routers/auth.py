@@ -1,3 +1,5 @@
+import hashlib
+from datetime import timezone
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -5,12 +7,14 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
+from app.models.refresh_token import RefreshToken
 from app.schemas.user import UserCreate, UserResponse
 from app.schemas.token import Token
 from app.auth.security import (
     hash_password,
     verify_password,
     create_access_token,
+    create_refresh_token,
 )
 from app.auth.dependencies import get_current_user
 
@@ -36,6 +40,7 @@ def register_user(
         existing_phone = db.query(User).filter(
             User.phone == user_data.phone
         ).first()
+
         if existing_phone:
             raise HTTPException(
                 status_code=409,
@@ -53,6 +58,7 @@ def register_user(
     db.add(user)
     db.commit()
     db.refresh(user)
+
     return user
 
 
@@ -80,7 +86,28 @@ def login_user(
         data={"sub": str(user.id), "role": user.role}
     )
 
-    return Token(access_token=access_token)
+    refresh_token, expires_at = create_refresh_token(user.id)
+
+    expires_at_db = expires_at.astimezone(timezone.utc).replace(
+        tzinfo=None
+    )
+
+    refresh_token_record = RefreshToken(
+        user_id=user.id,
+        token_hash=hashlib.sha256(
+            refresh_token.encode("utf-8")
+        ).hexdigest(),
+        expires_at=expires_at_db,
+        is_revoked=False,
+    )
+
+    db.add(refresh_token_record)
+    db.commit()
+
+    return Token(
+        access_token=access_token,
+        refresh_token=refresh_token,
+    )
 
 
 @router.get("/me", response_model=UserResponse)

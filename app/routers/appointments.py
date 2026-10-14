@@ -224,7 +224,7 @@ def book_appointment(
         queue_appointment_confirmation(
             background_tasks=background_tasks,
             recipient=current_user.email,
-            patient_name=current_user.username,
+            patient_name=current_user.full_name,
             doctor_name=f"Doctor #{doctor.id}",
             appointment_date=str(appointment.appointment_date),
             appointment_time=str(appointment.appointment_time),

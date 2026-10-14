@@ -1,6 +1,9 @@
+
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 
 from app.routers.auth import router as auth_router
 from app.routers.auth_tokens import router as auth_tokens_router
@@ -54,6 +57,23 @@ def root():
 @app.get("/health", tags=["Health"])
 def health_check():
     return {"status": "ok"}
+
+
+@app.get("/queue-test", include_in_schema=False)
+def queue_test_page():
+    html_file = (
+        Path(__file__).resolve().parent.parent / "queue-test.html"
+    )
+
+    if not html_file.is_file():
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            status_code=404,
+            detail="queue-test.html file not found in project root",
+        )
+
+    return FileResponse(html_file, media_type="text/html")
 
 
 app.include_router(auth_router)

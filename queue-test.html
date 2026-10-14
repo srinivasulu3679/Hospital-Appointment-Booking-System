@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Live Queue</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 650px; margin: 40px auto; padding: 20px; }
+        input, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { cursor: pointer; }
+        #status { margin: 15px 0; font-weight: bold; }
+        #messages { padding-left: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Hospital Live Queue</h2>
+
+    <label for="token">Access token</label>
+    <input id="token" type="password" placeholder="Paste your login access token">
+
+    <button id="connect">Connect to live queue</button>
+    <button id="disconnect">Disconnect</button>
+
+    <p id="status">Disconnected</p>
+    <h3>Live updates</h3>
+    <ul id="messages"></ul>
+
+    <script>
+        let socket;
+
+        document.getElementById("connect").onclick = function () {
+            const token = document.getElementById("token").value.trim();
+
+            if (!token) {
+                alert("Please enter your access token.");
+                return;
+            }
+
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.close();
+            }
+
+            const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+            socket = new WebSocket(
+                `${protocol}//${location.host}/ws/notifications?token=${encodeURIComponent(token)}`
+            );
+
+            socket.onopen = () => {
+                document.getElementById("status").textContent = "Connected";
+            };
+
+            socket.onmessage = (event) => {
+                const item = document.createElement("li");
+                item.textContent = event.data;
+                document.getElementById("messages").prepend(item);
+            };
+
+            socket.onerror = () => {
+                document.getElementById("status").textContent = "Connection error";
+            };
+
+            socket.onclose = () => {
+                document.getElementById("status").textContent = "Disconnected";
+            };
+        };
+
+        document.getElementById("disconnect").onclick = function () {
+            if (socket) socket.close();
+        };
+    </script>
+</body>
+</html>
